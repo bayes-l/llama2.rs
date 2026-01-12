@@ -126,8 +126,8 @@ fn read_floats(file: &mut File, count: usize) -> io::Result<Vec<f32>> {
 fn rmsnorm(o: &mut [f32], x: &[f32], weight: &[f32]) {
     let size = x.len();
     let mut ss: f32 = 0.0;
-    for i in 0..size {
-        ss += x[i] * x[i];
+    for xi in x.iter().take(size) {
+        ss += xi * xi;
     }
     ss /= size as f32;
     ss += 1e-5;
@@ -140,12 +140,12 @@ fn rmsnorm(o: &mut [f32], x: &[f32], weight: &[f32]) {
 fn softmax(x: &mut [f32]) {
     let max_val = x.iter().cloned().fold(f32::NEG_INFINITY, f32::max);
     let mut sum = 0.0;
-    for i in 0..x.len() {
-        x[i] = (x[i] - max_val).exp();
-        sum += x[i];
+    for xi in x.iter_mut() {
+        *xi = (*xi - max_val).exp();
+        sum += *xi;
     }
-    for i in 0..x.len() {
-        x[i] /= sum;
+    for xi in x.iter_mut() {
+        *xi /= sum;
     }
 }
 
@@ -232,8 +232,8 @@ fn transformer(token: i32, pos: i32, config: &Config, s: &mut RunState, w: &Tran
             for t in 0..=pos as usize {
                 let k_offset = loff + t * kv_dim + (h / kv_mul as usize) * head_size;
                 let mut score = 0.0;
-                for i in 0..head_size {
-                    score += q[i] * s.key_cache[k_offset + i];
+                for (i, &qi) in q.iter().enumerate().take(head_size) {
+                    score += qi * s.key_cache[k_offset + i];
                 }
                 score /= (head_size as f32).sqrt();
                 s.att[att_offset + t] = score;
@@ -315,14 +315,14 @@ fn build_tokenizer(tokenizer_path: &str, vocab_size: i32) -> io::Result<Vec<Stri
     let file = File::open(tokenizer_path)?;
     let mut reader = io::BufReader::new(file);
     
-    for i in 0..vocab_size as usize {
+    for vocab_item in vocab.iter_mut().take(vocab_size as usize) {
         let mut buffer = [0u8; 4];
         reader.read_exact(&mut buffer)?;
         let len = f32::from_le_bytes(buffer) as usize;
         
         let mut str_buffer = vec![0u8; len];
         reader.read_exact(&mut str_buffer)?;
-        vocab[i] = String::from_utf8_lossy(&str_buffer).to_string();
+        *vocab_item = String::from_utf8_lossy(&str_buffer).to_string();
     }
     
     Ok(vocab)
@@ -541,7 +541,7 @@ fn main() -> io::Result<()> {
     };
     let mut pos = 0;
     
-    print!("<s>\n");
+    println!("<s>");
     io::stdout().flush()?;
     
     let mut next;
