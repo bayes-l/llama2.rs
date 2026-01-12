@@ -126,7 +126,7 @@ fn read_floats(file: &mut File, count: usize) -> io::Result<Vec<f32>> {
 fn rmsnorm(o: &mut [f32], x: &[f32], weight: &[f32]) {
     let size = x.len();
     let mut ss: f32 = 0.0;
-    for xi in x.iter().take(size) {
+    for xi in x.iter() {
         ss += xi * xi;
     }
     ss /= size as f32;
@@ -318,7 +318,7 @@ fn build_tokenizer(tokenizer_path: &str, vocab_size: i32) -> io::Result<Vec<Stri
     for vocab_item in vocab.iter_mut().take(vocab_size as usize) {
         let mut buffer = [0u8; 4];
         reader.read_exact(&mut buffer)?;
-        let len = f32::from_le_bytes(buffer) as usize;
+        let len = u32::from_le_bytes(buffer) as usize;
         
         let mut str_buffer = vec![0u8; len];
         reader.read_exact(&mut str_buffer)?;
@@ -347,11 +347,13 @@ fn str_lookup(str: &str, sorted_vocab: &[TokenIndex]) -> i32 {
 }
 
 fn encode(text: &str, vocab: &[String], sorted_vocab: &[TokenIndex], tokens: &mut Vec<i32>) {
+    const INVALID_SCORE: f32 = -1e10;
+    
     tokens.clear();
     
     // encode every individual byte in the input string
     for byte in text.bytes() {
-        let token_str = format!("{}", byte as char);
+        let token_str = format!("{}", byte);
         let id = str_lookup(&token_str, sorted_vocab);
         if id != -1 {
             tokens.push(id);
@@ -360,7 +362,7 @@ fn encode(text: &str, vocab: &[String], sorted_vocab: &[TokenIndex], tokens: &mu
     
     // merge the best consecutive pair each iteration
     loop {
-        let mut best_score = -1e10;
+        let mut best_score = INVALID_SCORE;
         let mut best_id = -1;
         let mut best_idx = -1;
         
