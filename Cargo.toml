@@ -1,0 +1,16 @@
+[package]
+name = "llama2"
+version = "0.1.0"
+edition = "2021"
+authors = ["llama2.rs contributors"]
+description = "Rust implementation of llama2.c for LLaMA 2 model inference"
+license = "MIT"
+repository = "https://github.com/bayes-l/llama2.rs"
+
+[dependencies]
+clap = { version = "4.5", features = ["derive"] }
+rand = "0.8"
+
+[[bin]]
+name = "llama2"
+path = "src/main.rs"
