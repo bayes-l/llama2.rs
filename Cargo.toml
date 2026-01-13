@@ -1,0 +1,17 @@
+[package]
+name = "llama2"
+version = "0.1.0"
+edition = "2015"
+authors = ["Qiang Zhao"]
+description = "Rust implementation of llama2.c for LLaMA 2 model inference"
+license = "MIT"
+repository = "https://github.com/bayes-l/llama2.rs"
+
+[dependencies]
+clap = { version = "4.5.54", features = ["derive"] }
+rand = "0.9.2"
+
+
+[[bin]]
+name = "llama2"
+path = "src/main.rs"
